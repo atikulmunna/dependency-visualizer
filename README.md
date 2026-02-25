@@ -67,6 +67,8 @@ This opens an interactive graph dashboard in your browser at `http://127.0.0.1:8
 | `--port 3000` or `-p 3000` | Use a different port |
 | `--no-open` | Don't auto-open the browser |
 
+![Web Dashboard — force-directed dependency graph](assets/dependency-biz.png)
+
 ---
 
 ## All Commands
