@@ -16,8 +16,8 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            color: #e0e0e0;
+            background: #0a0a0a;
+            color: #d4d4d4;
             height: 100vh;
             overflow: hidden;
             display: flex;
@@ -27,9 +27,8 @@
         .sidebar {
             width: 340px;
             min-width: 340px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            background: #111111;
+            border-right: 1px solid #222;
             display: flex;
             flex-direction: column;
             overflow-y: auto;
@@ -38,38 +37,35 @@
 
         .sidebar-header {
             padding: 24px 20px 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid #222;
         }
 
         .sidebar-header h1 {
             font-size: 1.3rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #ffffff;
             margin-bottom: 4px;
         }
 
         .sidebar-header .subtitle {
             font-size: 0.75rem;
-            color: #888;
+            color: #666;
             font-weight: 300;
         }
 
         /* Search */
         .search-container {
             padding: 12px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid #222;
         }
 
         .search-input {
             width: 100%;
             padding: 10px 14px;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: #181818;
+            border: 1px solid #333;
             border-radius: 8px;
-            color: #e0e0e0;
+            color: #d4d4d4;
             font-family: 'Inter', sans-serif;
             font-size: 0.85rem;
             outline: none;
@@ -77,25 +73,25 @@
         }
 
         .search-input:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+            border-color: #888;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
         }
 
         .search-input::placeholder {
-            color: #666;
+            color: #555;
         }
 
         /* Stats */
         .stats-section {
             padding: 16px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid #222;
         }
 
         .stats-section h3 {
             font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            color: #888;
+            color: #666;
             margin-bottom: 12px;
         }
 
@@ -106,8 +102,8 @@
         }
 
         .stat-card {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: #181818;
+            border: 1px solid #2a2a2a;
             border-radius: 8px;
             padding: 10px 12px;
         }
@@ -120,34 +116,34 @@
 
         .stat-label {
             font-size: 0.65rem;
-            color: #888;
+            color: #666;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-top: 2px;
         }
 
         .stat-card.highlight {
-            border-color: rgba(102, 126, 234, 0.3);
-            background: rgba(102, 126, 234, 0.08);
+            border-color: #444;
+            background: #1a1a1a;
         }
 
         .stat-card.danger {
-            border-color: rgba(234, 102, 102, 0.3);
-            background: rgba(234, 102, 102, 0.08);
+            border-color: #555;
+            background: #1a1a1a;
         }
 
         .stat-card.danger .stat-value {
-            color: #ea6666;
+            color: #aaa;
         }
 
         .stat-card.success .stat-value {
-            color: #66ea99;
+            color: #ccc;
         }
 
         /* SCC List */
         .scc-section {
             padding: 16px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid #222;
         }
 
         .scc-chip {
@@ -156,15 +152,22 @@
             margin: 2px 3px;
             border-radius: 12px;
             font-size: 0.7rem;
-            background: rgba(234, 102, 102, 0.15);
-            border: 1px solid rgba(234, 102, 102, 0.3);
-            color: #ea6666;
+            background: #1e1e1e;
+            border: 1px solid #444;
+            color: #bbb;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .scc-chip:hover {
+            background: #2a2a2a;
+            border-color: #666;
         }
 
         .scc-chip.trivial {
-            background: rgba(255, 255, 255, 0.04);
-            border-color: rgba(255, 255, 255, 0.1);
-            color: #888;
+            background: #151515;
+            border-color: #2a2a2a;
+            color: #555;
         }
 
         /* Node detail */
@@ -177,7 +180,7 @@
             font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            color: #888;
+            color: #666;
             margin-bottom: 10px;
         }
 
@@ -190,7 +193,7 @@
 
         .detail-deps {
             font-size: 0.8rem;
-            color: #aaa;
+            color: #999;
             line-height: 1.6;
         }
 
@@ -199,31 +202,32 @@
             padding: 2px 8px;
             margin: 2px 2px;
             border-radius: 4px;
-            background: rgba(102, 126, 234, 0.1);
-            border: 1px solid rgba(102, 126, 234, 0.2);
-            color: #99aaee;
+            background: #1e1e1e;
+            border: 1px solid #333;
+            color: #bbb;
             font-size: 0.72rem;
             cursor: pointer;
             transition: all 0.2s;
         }
 
         .detail-deps .dep-tag:hover {
-            background: rgba(102, 126, 234, 0.25);
+            background: #2a2a2a;
+            border-color: #555;
         }
 
         /* Controls */
         .controls {
             padding: 16px 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: 1px solid #222;
         }
 
         .btn {
             width: 100%;
             padding: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            border: 1px solid #333;
             border-radius: 8px;
-            background: rgba(255, 255, 255, 0.06);
-            color: #e0e0e0;
+            background: #181818;
+            color: #d4d4d4;
             font-family: 'Inter', sans-serif;
             font-size: 0.8rem;
             cursor: pointer;
@@ -232,21 +236,21 @@
         }
 
         .btn:hover {
-            background: rgba(102, 126, 234, 0.15);
-            border-color: rgba(102, 126, 234, 0.3);
+            background: #252525;
+            border-color: #555;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: #fff;
             border: none;
-            color: #fff;
-            font-weight: 500;
+            color: #000;
+            font-weight: 600;
         }
 
         .btn-primary:hover {
-            opacity: 0.9;
+            background: #e0e0e0;
             transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
         }
 
         /* ── Graph Canvas ────────────────────────── */
@@ -268,29 +272,29 @@
 
         /* Links */
         .link {
-            stroke: rgba(130, 140, 200, 0.25);
+            stroke: rgba(255, 255, 255, 0.12);
             stroke-width: 1.5;
             fill: none;
         }
 
         .link.highlighted {
-            stroke: #667eea;
+            stroke: #fff;
             stroke-width: 2.5;
             stroke-opacity: 1;
         }
 
         .link.scc-link {
-            stroke: #ea6666;
+            stroke: rgba(255, 255, 255, 0.3);
             stroke-width: 2;
         }
 
         /* Arrowheads */
         marker path {
-            fill: rgba(130, 140, 200, 0.4);
+            fill: rgba(255, 255, 255, 0.25);
         }
 
         marker.highlighted path {
-            fill: #667eea;
+            fill: #fff;
         }
 
         /* Nodes */
@@ -307,30 +311,31 @@
         .node.highlighted circle {
             stroke: #fff;
             stroke-width: 3;
-            filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.6));
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
         }
 
         .node.scc-node circle {
-            stroke: #ea6666;
+            stroke: #888;
             stroke-width: 3;
+            stroke-dasharray: 3, 2;
         }
 
         .node.dimmed circle {
-            opacity: 0.15;
-        }
-
-        .node.dimmed text {
             opacity: 0.1;
         }
 
+        .node.dimmed text {
+            opacity: 0.08;
+        }
+
         .link.dimmed {
-            stroke-opacity: 0.05;
+            stroke-opacity: 0.03;
         }
 
         .node text {
             font-family: 'Inter', sans-serif;
             font-size: 10px;
-            fill: #ccc;
+            fill: #999;
             pointer-events: none;
             text-anchor: middle;
             dominant-baseline: central;
@@ -341,12 +346,12 @@
         .tooltip {
             position: absolute;
             padding: 8px 12px;
-            background: rgba(15, 12, 41, 0.95);
+            background: rgba(10, 10, 10, 0.95);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(102, 126, 234, 0.3);
+            border: 1px solid #444;
             border-radius: 6px;
             font-size: 0.75rem;
-            color: #e0e0e0;
+            color: #d4d4d4;
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.15s;
@@ -359,9 +364,8 @@
             position: absolute;
             bottom: 16px;
             right: 16px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: #111;
+            border: 1px solid #2a2a2a;
             border-radius: 8px;
             padding: 10px 14px;
             font-size: 0.7rem;
@@ -372,7 +376,7 @@
             align-items: center;
             gap: 8px;
             margin: 4px 0;
-            color: #aaa;
+            color: #888;
         }
 
         .legend-dot {
@@ -440,16 +444,16 @@
         <div class="tooltip" id="tooltip"></div>
         <div class="legend">
             <div class="legend-item">
-                <div class="legend-dot" style="background: #667eea;"></div> Root node
+                <div class="legend-dot" style="background: #ffffff;"></div> Root node
             </div>
             <div class="legend-item">
-                <div class="legend-dot" style="background: #a855f7;"></div> Intermediate
+                <div class="legend-dot" style="background: #888888;"></div> Intermediate
             </div>
             <div class="legend-item">
-                <div class="legend-dot" style="background: #22d3ee;"></div> Leaf node
+                <div class="legend-dot" style="background: #444444;"></div> Leaf node
             </div>
             <div class="legend-item">
-                <div class="legend-dot" style="background: #ea6666;"></div> In cycle / SCC
+                <div class="legend-dot" style="background: #666; border: 1px dashed #aaa;"></div> In cycle / SCC
             </div>
         </div>
     </div>
@@ -478,24 +482,22 @@
 
         // SCC membership (for highlighting)
         const sccNodes = new Set();
-        const sccEdgePairs = new Set();
         (meta.sccs || []).forEach(comp => {
             if (comp.length > 1) {
                 comp.forEach(n => sccNodes.add(n));
             }
         });
 
-        // Depth color scale
-        const depthScale = d3.scaleLinear()
-            .domain([0, Math.max(meta.max_depth || 1, 1)])
-            .range(['#667eea', '#22d3ee']);
-
+        // Monochrome color — white for roots, gray for mid, dark for leaves
         function nodeColor(d) {
-            if (sccNodes.has(d.id)) return '#ea6666';
-            if ((meta.roots || []).includes(d.id)) return '#667eea';
-            if ((meta.leaves || []).includes(d.id)) return '#22d3ee';
+            if (sccNodes.has(d.id)) return '#888';
+            if ((meta.roots || []).includes(d.id)) return '#ffffff';
+            if ((meta.leaves || []).includes(d.id)) return '#444444';
             const depth = d.depth !== undefined ? d.depth : 1;
-            return d3.interpolateHsl('#a855f7', '#22d3ee')(depth / Math.max(meta.max_depth || 1, 1));
+            const t = depth / Math.max(meta.max_depth || 1, 1);
+            // Interpolate from white (#fff) to dark gray (#444)
+            const val = Math.round(255 - t * 187);
+            return `rgb(${val},${val},${val})`;
         }
 
         function nodeRadius(d) {
@@ -544,7 +546,7 @@
         const svg = d3.select(container).append('svg')
             .attr('viewBox', [0, 0, width, height]);
 
-        // Arrowhead marker
+        // Arrowhead markers
         svg.append('defs').append('marker')
             .attr('id', 'arrowhead')
             .attr('viewBox', '0 -5 10 10')
@@ -555,7 +557,7 @@
             .attr('orient', 'auto')
             .append('path')
             .attr('d', 'M0,-5L10,0L0,5')
-            .attr('fill', 'rgba(130,140,200,0.4)');
+            .attr('fill', 'rgba(255,255,255,0.25)');
 
         svg.append('defs').append('marker')
             .attr('id', 'arrowhead-hl')
@@ -567,7 +569,7 @@
             .attr('orient', 'auto')
             .append('path')
             .attr('d', 'M0,-5L10,0L0,5')
-            .attr('fill', '#667eea');
+            .attr('fill', '#ffffff');
 
         const g = svg.append('g');
 
@@ -615,7 +617,10 @@
         nodeElements.append('circle')
             .attr('r', d => nodeRadius(d))
             .attr('fill', d => nodeColor(d))
-            .attr('stroke', d => d3.color(nodeColor(d)).darker(0.5));
+            .attr('stroke', d => {
+                const c = d3.color(nodeColor(d));
+                return c ? c.darker(0.8) : '#333';
+            });
 
         nodeElements.append('text')
             .text(d => d.id.length > 14 ? d.id.slice(0, 12) + '…' : d.id)
@@ -719,12 +724,12 @@
             const deps = outEdges.get(nodeId) || [];
             const inDeps = inEdges.get(nodeId) || [];
 
-            let html = '<div style="margin-bottom:6px;color:#888;font-size:0.7rem;">DEPENDS ON</div>';
-            if (deps.length === 0) html += '<span style="color:#666;">No dependencies</span>';
+            let html = '<div style="margin-bottom:6px;color:#666;font-size:0.7rem;">DEPENDS ON</div>';
+            if (deps.length === 0) html += '<span style="color:#555;">No dependencies</span>';
             else deps.forEach(d => { html += `<span class="dep-tag" onclick="highlightNode('${d}')">${d}</span>`; });
 
-            html += '<div style="margin-top:10px;margin-bottom:6px;color:#888;font-size:0.7rem;">DEPENDED ON BY</div>';
-            if (inDeps.length === 0) html += '<span style="color:#666;">No dependents</span>';
+            html += '<div style="margin-top:10px;margin-bottom:6px;color:#666;font-size:0.7rem;">DEPENDED ON BY</div>';
+            if (inDeps.length === 0) html += '<span style="color:#555;">No dependents</span>';
             else inDeps.forEach(d => { html += `<span class="dep-tag" onclick="highlightNode('${d}')">${d}</span>`; });
 
             depsEl.innerHTML = html;
