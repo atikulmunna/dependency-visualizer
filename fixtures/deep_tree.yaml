@@ -1,0 +1,37 @@
+# Deep dependency tree for depth/performance testing
+project: deep-app
+
+dependencies:
+  level-0:
+    - level-1a
+    - level-1b
+
+  level-1a:
+    - level-2a
+    - level-2b
+
+  level-1b:
+    - level-2c
+
+  level-2a:
+    - level-3a
+
+  level-2b:
+    - level-3a
+    - level-3b
+
+  level-2c:
+    - level-3b
+    - level-3c
+
+  level-3a:
+    - level-4a
+
+  level-3b:
+    - level-4a
+
+  level-3c:
+    - level-4b
+
+  level-4a: []
+  level-4b: []

@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing / Coverage
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Project-specific exclusions
+Dependency_Graph_Visualizer_Specification.md

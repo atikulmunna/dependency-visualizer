@@ -1,0 +1,5 @@
+# Basic Python dependencies
+flask
+requests
+click
+pyyaml

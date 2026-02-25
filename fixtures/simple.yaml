@@ -1,0 +1,16 @@
+# Simple dependency graph
+project: my-app
+
+dependencies:
+  app:
+    - auth
+    - database
+
+  auth:
+    - crypto
+
+  database:
+    - connection-pool
+
+  crypto: []
+  connection-pool: []

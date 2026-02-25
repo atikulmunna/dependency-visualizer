@@ -1,0 +1,8 @@
+# This file has some problematic lines
+
+flask==2.3.2
+   
+===badline===
+requests
+!!invalid!!
+click>=8.0

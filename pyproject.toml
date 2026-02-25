@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dgvis"
+version = "0.1.0"
+description = "CLI tool to parse dependency files, build graphs, detect cycles, and export visualizations."
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[project.scripts]
+dgvis = "dgvis.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

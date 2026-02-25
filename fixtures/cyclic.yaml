@@ -1,0 +1,15 @@
+# Dependency graph with a cycle: A -> B -> C -> A
+project: cyclic-app
+
+dependencies:
+  service-a:
+    - service-b
+    - logger
+
+  service-b:
+    - service-c
+
+  service-c:
+    - service-a
+
+  logger: []
