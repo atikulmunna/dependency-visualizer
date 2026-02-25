@@ -169,3 +169,19 @@ def scc(file: str) -> None:
         for i, comp in enumerate(non_trivial, 1):
             click.echo(f"  {i}. [{len(comp)} nodes] {' ↔ '.join(comp)}")
         click.echo(f"\n  + {len(components) - len(non_trivial)} independent node(s)")
+
+
+# ── web ──────────────────────────────────────────────────────
+
+
+@main.command()
+@click.argument("file")
+@click.option("--port", "-p", default=8080, help="Port for the web server.")
+@click.option("--no-open", is_flag=True, help="Don't auto-open the browser.")
+def web(file: str, port: int, no_open: bool) -> None:
+    """Launch an interactive web dashboard for the dependency graph in FILE."""
+    graph, _ = _load_graph(file)
+
+    from dgvis.web.serve import serve
+    serve(graph, port=port, open_browser=not no_open)
+

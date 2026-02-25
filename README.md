@@ -116,6 +116,18 @@ $ python -m dgvis scc fixtures/cyclic.yaml
   + 1 independent node(s)
 ```
 
+### `dgvis web <file>`
+Launch an interactive web dashboard with D3.js force-directed graph.
+```bash
+# Start dashboard (auto-opens browser)
+python -m dgvis web fixtures/package.json
+
+# Custom port, no auto-open
+python -m dgvis web fixtures/cyclic.yaml -p 3000 --no-open
+```
+
+Features: drag nodes, zoom/pan, search, click to view transitive deps, SCC highlighting, SVG export.
+
 ## Supported Formats
 
 | Format | File | Depth | Notes |
@@ -145,11 +157,12 @@ dependencies:
 
 ```
 dgvis/
-├── cli.py        → Click-based CLI with 5 subcommands
+├── cli.py        → Click-based CLI with 6 subcommands
 ├── parser.py     → Format detection + 5 parsers + plugin registry
 ├── graph.py      → Node/Graph (adjacency list, from scratch)
 ├── analyzer.py   → DFS, Tarjan's SCC, topo sort, BFS depth
 ├── exporter.py   → DOT, JSON, ASCII tree renderers
+├── web/          → D3.js dashboard + HTTP server
 └── __main__.py   → python -m dgvis entry point
 ```
 
