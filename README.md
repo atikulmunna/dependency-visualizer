@@ -1,142 +1,141 @@
 # dgvis — Dependency Graph Visualizer
 
-A systems-focused CLI tool that parses dependency files, builds directed graphs, detects circular dependencies, and exports visualizations. Built from scratch with zero graph library dependencies.
+A CLI tool that parses dependency files from real projects, builds directed graphs, detects circular dependencies, and visualizes them as interactive force-directed graphs. Built from scratch with zero graph library dependencies.
 
 ## Features
 
+- **Interactive Web Dashboard** — D3.js force-directed graph with drag, zoom, search, and SVG export
 - **Multi-format parsing** — `requirements.txt`, `package.json`/`package-lock.json`, `go.mod`, custom YAML
 - **Cycle detection** — Iterative DFS with back-edge tracking, handles 10,000+ node graphs
 - **Strongly connected components** — Tarjan's algorithm finds tightly-coupled clusters
 - **Topological sorting** — Kahn's algorithm for build-order resolution
-- **Transitive dependency analysis** — Discover all downstream dependencies
-- **Multiple export formats** — Graphviz DOT, JSON, ASCII tree with dedup markers
-- **Lock file support** — Auto-resolves `package-lock.json` for full transitive tree
+- **Multiple export formats** — Graphviz DOT, JSON, ASCII tree
 - **Plugin architecture** — Register custom parsers via decorator or function call
 
-## Quick Start
+---
+
+## Getting Started
+
+### Step 1: Install
 
 ```bash
-# Install dependencies
-pip install click pyyaml pytest
-
-# Clone and run
 git clone https://github.com/atikulmunna/dependency-visualizer.git
 cd dependency-visualizer
-
-# Set PYTHONPATH and run
-export PYTHONPATH="."          # Linux/macOS
-$env:PYTHONPATH="."            # PowerShell
-
-python -m dgvis analyze fixtures/simple.yaml
+pip install click pyyaml
 ```
 
-## Commands
+### Step 2: Set Python Path
 
-### `dgvis analyze <file>`
-Parse and summarize a dependency graph.
-```
-$ python -m dgvis analyze fixtures/package.json
+This tells Python where to find the `dgvis` package. Run this once per terminal session:
 
-─── Dependency Graph Analysis ───
-  Nodes       : 11
-  Edges       : 11
-  Root nodes  : __root__
-  Leaf nodes  : 5
-  Max depth   : 3
-  Avg deps    : 1.0
-  Cycles      : None ✓
+```powershell
+# PowerShell (Windows)
+$env:PYTHONPATH="."
+
+# Bash (Linux/macOS)
+export PYTHONPATH="."
 ```
 
-### `dgvis visualize <file>`
-Export graph as ASCII tree, DOT, or JSON.
-```
-$ python -m dgvis visualize fixtures/deep_tree.yaml
+### Step 3: Visualize Your Project
 
-level-0
-    ├── level-1a
-    │   ├── level-2a
-    │   │   └── level-3a
-    │   │       └── level-4a
-    │   └── level-2b
-    │       ├── level-3a (*)
-    │       └── level-3b
-    │           └── level-4a (*)
-    └── level-1b
-        └── level-2c
-            ├── level-3b (*)
-            └── level-3c
-                └── level-4b
+Point dgvis at **any dependency file** from a real project on your machine:
+
+```powershell
+# Node.js project (best results — hundreds of deps)
+python -m dgvis web C:\path\to\your-project\package-lock.json
+
+# Python project
+python -m dgvis web C:\path\to\your-project\requirements.txt
+
+# Go project
+python -m dgvis web C:\path\to\your-project\go.mod
 ```
 
+This opens an interactive graph dashboard in your browser at `http://127.0.0.1:8080`.
+
+**Dashboard controls:**
+- **Drag** any node to rearrange
+- **Scroll** to zoom in/out
+- **Click a node** to highlight its dependency chain
+- **Type in the search box** to find specific packages
+- **Export SVG** button to download the graph
+- Press **Ctrl+C** in the terminal to stop the server
+
+**Options:**
+| Flag | Description |
+|------|-------------|
+| `--port 3000` or `-p 3000` | Use a different port |
+| `--no-open` | Don't auto-open the browser |
+
+---
+
+## All Commands
+
+dgvis has 6 commands. All work with any supported file format.
+
+### `dgvis analyze <file>` — Quick summary
 ```bash
-# Export as DOT for Graphviz rendering
-python -m dgvis visualize fixtures/simple.yaml -f dot -o graph.dot
+python -m dgvis analyze C:\path\to\package.json
 
-# Export as JSON
-python -m dgvis visualize fixtures/simple.yaml -f json -o graph.json
+# Output:
+# ─── Dependency Graph Analysis ───
+#   Nodes       : 11
+#   Edges       : 11
+#   Cycles      : None ✓
 ```
 
-### `dgvis detect-cycles <file>`
-Check for circular dependencies.
-```
-$ python -m dgvis detect-cycles fixtures/cyclic.yaml
-
-⚠ Found 1 cycle(s):
-  1. service-a → service-b → service-c → service-a
-```
-
-### `dgvis stats <file>`
-Detailed metrics with topological ordering.
-```
-$ python -m dgvis stats fixtures/simple.yaml -v
-
-─── Graph Statistics ───
-
-  Topological order (5 nodes):
-    app → auth → database → crypto → connection-pool
-
-  Per-node dependency counts:
-    app: 2 direct dep(s)
-    auth: 1 direct dep(s)
-    database: 1 direct dep(s)
-    crypto: 0 direct dep(s)
-    connection-pool: 0 direct dep(s)
-
-  Total: 5 nodes, 4 edges, depth 2
-```
-
-### `dgvis scc <file>`
-Find strongly connected components (tightly-coupled clusters).
-```
-$ python -m dgvis scc fixtures/cyclic.yaml
-
-⚠ Found 1 tightly-coupled cluster(s):
-  1. [3 nodes] service-c ↔ service-b ↔ service-a
-
-  + 1 independent node(s)
-```
-
-### `dgvis web <file>`
-Launch an interactive web dashboard with D3.js force-directed graph.
+### `dgvis visualize <file>` — Export graph
 ```bash
-# Start dashboard (auto-opens browser)
-python -m dgvis web fixtures/package.json
+# ASCII tree (default)
+python -m dgvis visualize C:\path\to\requirements.txt
 
-# Custom port, no auto-open
-python -m dgvis web fixtures/cyclic.yaml -p 3000 --no-open
+# Graphviz DOT
+python -m dgvis visualize deps.yaml -f dot -o graph.dot
+
+# JSON
+python -m dgvis visualize deps.yaml -f json -o graph.json
 ```
 
-Features: drag nodes, zoom/pan, search, click to view transitive deps, SCC highlighting, SVG export.
+### `dgvis detect-cycles <file>` — Find circular deps
+```bash
+python -m dgvis detect-cycles C:\path\to\deps.yaml
 
-## Supported Formats
+# ⚠ Found 1 cycle(s):
+#   1. service-a → service-b → service-c → service-a
+```
 
-| Format | File | Depth | Notes |
-|--------|------|-------|-------|
-| Python | `requirements.txt` | Direct | Handles version specifiers, comments, pip flags |
-| Node.js | `package.json` | Direct or tree | Auto-uses `package-lock.json` if present |
-| Node.js | `package-lock.json` | Full tree | npm v2/v3 `packages` + v1 `dependencies` |
-| Go | `go.mod` | Direct | Block + single-line `require`, path shortening |
-| Custom | `deps.yaml` | Full tree | For testing and manual graph definition |
+### `dgvis stats <file>` — Detailed metrics
+```bash
+python -m dgvis stats C:\path\to\requirements.txt -v
+
+# Shows topological order, per-node dep counts, etc.
+```
+
+### `dgvis scc <file>` — Find tightly-coupled clusters
+```bash
+python -m dgvis scc C:\path\to\deps.yaml
+
+# ⚠ Found 1 tightly-coupled cluster(s):
+#   1. [3 nodes] service-c ↔ service-b ↔ service-a
+```
+
+### `dgvis web <file>` — Interactive dashboard
+```bash
+python -m dgvis web C:\path\to\package-lock.json
+python -m dgvis web C:\path\to\requirements.txt -p 3000 --no-open
+```
+
+---
+
+## Supported File Formats
+
+| Ecosystem | File | What it parses |
+|-----------|------|----------------|
+| **Node.js** | `package-lock.json` | Full transitive dependency tree (best results) |
+| **Node.js** | `package.json` | Direct deps + devDeps. Auto-uses lock file if present |
+| **Python** | `requirements.txt` | Direct dependencies with version specifiers |
+| **Go** | `go.mod` | Direct module dependencies |
+| **Custom** | `*.yaml` / `*.yml` | Manual dependency graph definition |
 
 ### Custom YAML Format
 ```yaml
@@ -153,13 +152,15 @@ dependencies:
   connection-pool: []
 ```
 
+---
+
 ## Architecture
 
 ```
 dgvis/
-├── cli.py        → Click-based CLI with 6 subcommands
+├── cli.py        → Click CLI with 6 commands
 ├── parser.py     → Format detection + 5 parsers + plugin registry
-├── graph.py      → Node/Graph (adjacency list, from scratch)
+├── graph.py      → Node/Graph (adjacency list, no external libs)
 ├── analyzer.py   → DFS, Tarjan's SCC, topo sort, BFS depth
 ├── exporter.py   → DOT, JSON, ASCII tree renderers
 ├── web/          → D3.js dashboard + HTTP server
@@ -168,25 +169,19 @@ dgvis/
 
 ### Data Flow
 ```
-Input File → Parser → {node: [deps]} → Graph Builder → Graph
-                                                         ↓
-                                              ┌──────────┼──────────┐
-                                              ↓          ↓          ↓
-                                          Analyzer   Exporter    CLI Output
-                                        (cycles,    (DOT, JSON,  (stats,
-                                        topo sort,   tree)        tables)
-                                        depth)
+Input File → Parser → {node: [deps]} → Graph → Analyzer / Exporter / Web UI
 ```
 
-## Algorithms & Complexity
+## Algorithms
 
-| Algorithm | Use | Time | Space |
-|-----------|-----|------|-------|
-| Iterative DFS | Cycle detection | O(V + E) | O(V) |
-| Tarjan's Algorithm | Strongly connected components | O(V + E) | O(V) |
-| Kahn's Algorithm | Topological sort | O(V + E) | O(V) |
-| BFS | Depth calculation | O(V + E) | O(V) |
-| Iterative DFS | Transitive deps | O(V + E) | O(V) |
+| Algorithm | Use | Complexity |
+|-----------|-----|------------|
+| Iterative DFS | Cycle detection | O(V + E) |
+| Tarjan's Algorithm | Strongly connected components | O(V + E) |
+| Kahn's Algorithm | Topological sort | O(V + E) |
+| BFS | Depth calculation | O(V + E) |
+
+---
 
 ## Plugin Architecture
 
@@ -198,7 +193,7 @@ from dgvis.parser import registry
 # Decorator form
 @registry.register(extensions=[".lock"], filenames=["Pipfile.lock"])
 def parse_pipfile_lock(filepath):
-    # Parse and return {"parent": ["dep1", "dep2"], ...}
+    # Return {parent: [dep1, dep2], ...}
     ...
 
 # Imperative form
@@ -207,11 +202,13 @@ registry.register_parser(my_parser, extensions=[".toml"])
 
 Plugins take priority over built-in parsers. Use `registry.clear()` to reset.
 
+---
+
 ## CI Integration
 
 ### GitHub Action
 
-Add this to any repo's `.github/workflows/` to check dependencies on every push:
+Add to any repo's `.github/workflows/` to check dependencies on every push:
 
 ```yaml
 name: Dependency Check
@@ -230,57 +227,30 @@ jobs:
           PYTHONPATH=/tmp/dgvis python -m dgvis detect-cycles requirements.txt
 ```
 
-Or use the included workflow — copy `.github/workflows/check-deps.yml` which auto-detects dependency files and writes analysis summaries to PRs.
-
 ### Pre-commit Hook
 
 ```bash
-# Copy the hook into your repo
 cp scripts/pre-commit-hook.sh .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
-
-# Or run manually
-bash scripts/pre-commit-hook.sh
-bash scripts/pre-commit-hook.sh path/to/deps.yaml  # specific file
 ```
 
-The hook auto-detects `requirements.txt`, `package.json`, `go.mod`, and YAML dep files.
+---
 
 ## Testing
 
 ```bash
-# Run all tests
 $env:PYTHONPATH="."; python -m pytest tests/ -v
 
-# 118 tests across 7 test files
-# Includes stress test with 10,000+ nodes
+# 118 tests across 7 test files (includes 10k+ node stress test)
 ```
-
-| Test File | Tests | Covers |
-|-----------|-------|--------|
-| `test_graph.py` | 16 | Node, Graph, builder |
-| `test_parser.py` | 32 | All formats, detection, edge cases |
-| `test_analyzer.py` | 22 | Cycles, topo sort, depth, transitive, SCC |
-| `test_exporter.py` | 10 | DOT, JSON, tree output |
-| `test_cli.py` | 17 | All commands including scc, flags, errors |
-| `test_performance.py` | 4 | 10k+ nodes, < 5s benchmark |
-| `test_plugin.py` | 10 | Plugin registry, priority, decorator API |
 
 ## Development
 
 ```bash
-# Clone
 git clone https://github.com/atikulmunna/dependency-visualizer.git
 cd dependency-visualizer
-
-# Install dependencies
-pip install click pyyaml pytest pytest-cov
-
-# Run tests
+pip install click pyyaml pytest
 $env:PYTHONPATH="."; python -m pytest tests/ -v
-
-# Run with coverage
-$env:PYTHONPATH="."; python -m pytest tests/ --cov=dgvis --cov-report=term-missing
 ```
 
 ## License
