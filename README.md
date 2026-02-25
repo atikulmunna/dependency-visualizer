@@ -169,6 +169,70 @@ dgvis/
 Input File → Parser → {node: [deps]} → Graph → Analyzer / Exporter / Web UI
 ```
 
+## How It Works
+
+### 1. Parsing — File → Dictionary
+
+When you run `dgvis web Cargo.toml`, the parser first **auto-detects the format** based on filename and extension. Each parser reads the file and extracts dependencies into a simple dictionary:
+
+```python
+# Input: Cargo.toml
+# Output:
+{"__root__": ["serde", "tokio", "clap"]}
+
+# Input: simple.yaml (with nested deps)
+# Output:
+{"app": ["auth", "database"], "auth": ["crypto"], "database": ["connection-pool"]}
+```
+
+For flat formats (requirements.txt, Cargo.toml, Gemfile, pom.xml), all packages are listed under a synthetic `__root__` node. For tree formats (YAML, package-lock.json), the full parent→child relationships are preserved.
+
+### 2. Graph Construction — Dictionary → Adjacency List
+
+The dictionary is converted into a **directed graph** using a hand-built adjacency list (no NetworkX or igraph):
+
+```
+app → [auth, database]
+auth → [crypto]
+database → [connection-pool]
+crypto → []
+connection-pool → []
+```
+
+Each node stores its name and outgoing edges. The graph supports O(1) neighbor lookup and O(V+E) traversals.
+
+### 3. Analysis — Graph → Insights
+
+Four algorithms run on the graph, all implemented iteratively (no recursion limits):
+
+- **Cycle Detection (DFS):** Walks the graph tracking a recursion stack. When a node is visited that's already on the stack, a cycle is found. The path is extracted by backtracking through the stack. Time: O(V+E).
+
+- **Tarjan's SCC:** Finds strongly connected components — groups of nodes that all depend on each other (directly or transitively). Uses a single DFS pass with a stack and low-link values. Any SCC with >1 node indicates circular coupling. Time: O(V+E).
+
+- **Topological Sort (Kahn's):** Computes a valid build order by repeatedly removing nodes with zero in-degree. If all nodes are processed, the graph is acyclic. Time: O(V+E).
+
+- **Depth Calculation (BFS):** Starting from root nodes (zero in-degree), BFS assigns each node a depth level. Used by the web UI to color nodes — lighter nodes are closer to the root, darker nodes are deeper leaves.
+
+### 4. Visualization — Graph → Dashboard
+
+The web UI works in three steps:
+
+1. **Data injection:** The server builds a JSON payload containing nodes, edges, depths, cycles, SCCs, roots, and leaves. This JSON is injected into the HTML template via regex, replacing the placeholder with real data.
+
+2. **Force simulation:** D3.js creates a force-directed layout where nodes repel each other and edges act as springs. Nodes are colored on a white-to-gray gradient based on depth. SCC nodes get dashed borders.
+
+3. **Interactivity:** Click a node to highlight its transitive dependency chain (all downstream nodes found via DFS). The search box filters nodes in real-time. SVG export captures the current layout.
+
+### 5. Watch Mode — Live Reload
+
+When `--watch` is enabled, a background thread polls the file's modification time every second. When a change is detected:
+
+```
+File changed → Re-parse → Rebuild graph → Re-render HTML → Browser auto-reloads
+```
+
+The browser polls a `/__hash` endpoint every 1.5 seconds. When the hash changes (indicating new data), the page reloads automatically.
+
 ## Algorithms
 
 | Algorithm | Use | Complexity |
