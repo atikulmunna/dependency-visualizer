@@ -259,14 +259,116 @@ def _shorten_go_module(module_path: str) -> str:
     return module_path.rstrip("/").rsplit("/", 1)[-1]
 
 
+# ── Plugin Registry ──────────────────────────────────────────
+
+
+from typing import Callable
+
+ParserFunc = Callable[[str | Path], dict[str, list[str]]]
+
+
+class ParserRegistry:
+    """Registry for custom dependency-file parsers.
+
+    Allows external parsers to be registered via decorator or function call.
+    Registered parsers take priority over built-in ones.
+
+    Usage::
+
+        from dgvis.parser import registry
+
+        @registry.register(extensions=[".lock"], filenames=["custom.lock"])
+        def parse_custom_lock(filepath):
+            ...
+    """
+
+    def __init__(self) -> None:
+        self._by_extension: dict[str, ParserFunc] = {}
+        self._by_filename: dict[str, ParserFunc] = {}
+
+    def register(
+        self,
+        extensions: list[str] | None = None,
+        filenames: list[str] | None = None,
+    ) -> Callable[[ParserFunc], ParserFunc]:
+        """Decorator to register a parser for given extensions/filenames.
+
+        Args:
+            extensions: File extensions to match (e.g. ``['.lock', '.deps']``).
+            filenames: Exact filenames to match (e.g. ``['custom.lock']``).
+        """
+        def decorator(func: ParserFunc) -> ParserFunc:
+            for ext in (extensions or []):
+                self._by_extension[ext.lower()] = func
+            for name in (filenames or []):
+                self._by_filename[name.lower()] = func
+            return func
+        return decorator
+
+    def register_parser(
+        self,
+        func: ParserFunc,
+        extensions: list[str] | None = None,
+        filenames: list[str] | None = None,
+    ) -> None:
+        """Imperatively register a parser (non-decorator form)."""
+        for ext in (extensions or []):
+            self._by_extension[ext.lower()] = func
+        for name in (filenames or []):
+            self._by_filename[name.lower()] = func
+
+    def lookup(self, filepath: str | Path) -> ParserFunc | None:
+        """Find a registered parser for the given filepath, or None."""
+        p = Path(filepath)
+        name = p.name.lower()
+        ext = p.suffix.lower()
+
+        # Exact filename match first (higher specificity)
+        if name in self._by_filename:
+            return self._by_filename[name]
+        if ext in self._by_extension:
+            return self._by_extension[ext]
+        return None
+
+    @property
+    def registered_extensions(self) -> list[str]:
+        return list(self._by_extension.keys())
+
+    @property
+    def registered_filenames(self) -> list[str]:
+        return list(self._by_filename.keys())
+
+    def clear(self) -> None:
+        """Remove all registered parsers. Mainly for testing."""
+        self._by_extension.clear()
+        self._by_filename.clear()
+
+
+# Global registry instance
+registry = ParserRegistry()
+
+
 # ── Auto-detection ───────────────────────────────────────────
+
+
+_BUILTIN_PARSERS: dict[str, ParserFunc] = {
+    "requirements": parse_requirements,
+    "yaml": parse_yaml,
+    "package_json": parse_package_json,
+    "gomod": parse_gomod,
+}
 
 
 def detect_format(filepath: str | Path) -> str:
     """Detect file format by extension.
 
-    Returns one of: ``'requirements'``, ``'yaml'``, ``'package_json'``, ``'gomod'``.
+    Returns one of: ``'requirements'``, ``'yaml'``, ``'package_json'``, ``'gomod'``,
+    or ``'plugin'`` if a registered plugin matches.
     """
+    # Check plugin registry first (plugins take priority)
+    if registry.lookup(filepath) is not None:
+        return "plugin"
+
     p = Path(filepath)
     name = p.name.lower()
     ext = p.suffix.lower()
@@ -291,7 +393,15 @@ def detect_format(filepath: str | Path) -> str:
 
 
 def parse_file(filepath: str | Path) -> dict[str, list[str]]:
-    """Auto-detect format and parse the dependency file."""
+    """Auto-detect format and parse the dependency file.
+
+    Plugin-registered parsers take priority over built-in ones.
+    """
+    # Check plugin registry first
+    plugin_parser = registry.lookup(filepath)
+    if plugin_parser is not None:
+        return plugin_parser(filepath)
+
     fmt = detect_format(filepath)
     if fmt == "yaml":
         return parse_yaml(filepath)
@@ -300,3 +410,4 @@ def parse_file(filepath: str | Path) -> dict[str, list[str]]:
     if fmt == "gomod":
         return parse_gomod(filepath)
     return parse_requirements(filepath)
+

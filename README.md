@@ -6,10 +6,12 @@ A systems-focused CLI tool that parses dependency files, builds directed graphs,
 
 - **Multi-format parsing** — `requirements.txt`, `package.json`/`package-lock.json`, `go.mod`, custom YAML
 - **Cycle detection** — Iterative DFS with back-edge tracking, handles 10,000+ node graphs
+- **Strongly connected components** — Tarjan's algorithm finds tightly-coupled clusters
 - **Topological sorting** — Kahn's algorithm for build-order resolution
 - **Transitive dependency analysis** — Discover all downstream dependencies
 - **Multiple export formats** — Graphviz DOT, JSON, ASCII tree with dedup markers
 - **Lock file support** — Auto-resolves `package-lock.json` for full transitive tree
+- **Plugin architecture** — Register custom parsers via decorator or function call
 
 ## Quick Start
 
@@ -103,6 +105,17 @@ $ python -m dgvis stats fixtures/simple.yaml -v
   Total: 5 nodes, 4 edges, depth 2
 ```
 
+### `dgvis scc <file>`
+Find strongly connected components (tightly-coupled clusters).
+```
+$ python -m dgvis scc fixtures/cyclic.yaml
+
+⚠ Found 1 tightly-coupled cluster(s):
+  1. [3 nodes] service-c ↔ service-b ↔ service-a
+
+  + 1 independent node(s)
+```
+
 ## Supported Formats
 
 | Format | File | Depth | Notes |
@@ -132,10 +145,10 @@ dependencies:
 
 ```
 dgvis/
-├── cli.py        → Click-based CLI with 4 subcommands
-├── parser.py     → Format detection + 5 parsers
+├── cli.py        → Click-based CLI with 5 subcommands
+├── parser.py     → Format detection + 5 parsers + plugin registry
 ├── graph.py      → Node/Graph (adjacency list, from scratch)
-├── analyzer.py   → DFS, topo sort, BFS depth, transitive deps
+├── analyzer.py   → DFS, Tarjan's SCC, topo sort, BFS depth
 ├── exporter.py   → DOT, JSON, ASCII tree renderers
 └── __main__.py   → python -m dgvis entry point
 ```
@@ -157,9 +170,29 @@ Input File → Parser → {node: [deps]} → Graph Builder → Graph
 | Algorithm | Use | Time | Space |
 |-----------|-----|------|-------|
 | Iterative DFS | Cycle detection | O(V + E) | O(V) |
+| Tarjan's Algorithm | Strongly connected components | O(V + E) | O(V) |
 | Kahn's Algorithm | Topological sort | O(V + E) | O(V) |
 | BFS | Depth calculation | O(V + E) | O(V) |
 | Iterative DFS | Transitive deps | O(V + E) | O(V) |
+
+## Plugin Architecture
+
+Register custom parsers for unsupported file formats:
+
+```python
+from dgvis.parser import registry
+
+# Decorator form
+@registry.register(extensions=[".lock"], filenames=["Pipfile.lock"])
+def parse_pipfile_lock(filepath):
+    # Parse and return {"parent": ["dep1", "dep2"], ...}
+    ...
+
+# Imperative form
+registry.register_parser(my_parser, extensions=[".toml"])
+```
+
+Plugins take priority over built-in parsers. Use `registry.clear()` to reset.
 
 ## Testing
 
@@ -167,7 +200,7 @@ Input File → Parser → {node: [deps]} → Graph Builder → Graph
 # Run all tests
 $env:PYTHONPATH="."; python -m pytest tests/ -v
 
-# 100 tests across 6 test files
+# 118 tests across 7 test files
 # Includes stress test with 10,000+ nodes
 ```
 
@@ -175,10 +208,11 @@ $env:PYTHONPATH="."; python -m pytest tests/ -v
 |-----------|-------|--------|
 | `test_graph.py` | 16 | Node, Graph, builder |
 | `test_parser.py` | 32 | All formats, detection, edge cases |
-| `test_analyzer.py` | 16 | Cycles, topo sort, depth, transitive |
+| `test_analyzer.py` | 22 | Cycles, topo sort, depth, transitive, SCC |
 | `test_exporter.py` | 10 | DOT, JSON, tree output |
-| `test_cli.py` | 15 | All commands, flags, errors |
+| `test_cli.py` | 17 | All commands including scc, flags, errors |
 | `test_performance.py` | 4 | 10k+ nodes, < 5s benchmark |
+| `test_plugin.py` | 10 | Plugin registry, priority, decorator API |
 
 ## Development
 
