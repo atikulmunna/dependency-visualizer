@@ -85,6 +85,18 @@ class TestCLI:
         assert result.exit_code == 0
         assert "direct dep" in result.output
 
+    # ── scc ────────────────────────────────────────────────────
+
+    def test_scc_acyclic(self):
+        result = self.runner.invoke(main, ["scc", f"{FIXTURES}/simple.yaml"])
+        assert result.exit_code == 0
+        assert "No tightly-coupled" in result.output
+
+    def test_scc_cyclic(self):
+        result = self.runner.invoke(main, ["scc", f"{FIXTURES}/cyclic.yaml"])
+        assert result.exit_code == 0
+        assert "tightly-coupled cluster" in result.output
+
     # ── Error handling ───────────────────────────────────────
 
     def test_file_not_found(self):
@@ -95,3 +107,4 @@ class TestCLI:
         result = self.runner.invoke(main, ["--version"])
         assert result.exit_code == 0
         assert "0.1.0" in result.output
+

@@ -7,7 +7,7 @@ from pathlib import Path
 import click
 
 from dgvis import __version__
-from dgvis.analyzer import detect_cycles, graph_stats, topological_sort
+from dgvis.analyzer import detect_cycles, graph_stats, strongly_connected_components, topological_sort
 from dgvis.exporter import export_dot, export_json, export_tree
 from dgvis.graph import build_graph
 from dgvis.parser import ParseError, parse_file
@@ -147,3 +147,25 @@ def stats(file: str, verbose: bool) -> None:
 
     st = graph_stats(graph)
     click.echo(f"\n  Total: {st['node_count']} nodes, {st['edge_count']} edges, depth {st['max_depth']}")
+
+
+# ── scc ──────────────────────────────────────────────────────
+
+
+@main.command()
+@click.argument("file")
+def scc(file: str) -> None:
+    """Find strongly connected components (tightly-coupled clusters) in FILE."""
+    graph, _ = _load_graph(file)
+    components = strongly_connected_components(graph)
+
+    non_trivial = [c for c in components if len(c) > 1]
+
+    if not non_trivial:
+        click.echo(click.style("✓ No tightly-coupled clusters found.", fg="green", bold=True))
+        click.echo(f"  All {len(components)} components are independent.")
+    else:
+        click.echo(click.style(f"⚠ Found {len(non_trivial)} tightly-coupled cluster(s):", fg="red", bold=True))
+        for i, comp in enumerate(non_trivial, 1):
+            click.echo(f"  {i}. [{len(comp)} nodes] {' ↔ '.join(comp)}")
+        click.echo(f"\n  + {len(components) - len(non_trivial)} independent node(s)")

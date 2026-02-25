@@ -146,6 +146,91 @@ def transitive_deps(graph: Graph, node: str) -> set[str]:
     return visited
 
 
+# ── Strongly Connected Components (Tarjan's) ────────────────
+
+
+def strongly_connected_components(graph: Graph) -> list[list[str]]:
+    """Find all strongly connected components using Tarjan's algorithm.
+
+    A strongly connected component (SCC) is a maximal set of nodes where
+    every node is reachable from every other node.  SCCs with more than
+    one node indicate tightly-coupled dependency clusters.
+
+    Uses an iterative implementation to avoid recursion limits.
+
+    Time: O(V + E).
+    Space: O(V).
+
+    Returns a list of SCCs, each as a list of node names.
+    SCCs with size > 1 are returned first (sorted by size descending),
+    followed by trivial SCCs (single nodes).
+    """
+    index_counter = [0]
+    node_index: dict[str, int] = {}
+    node_lowlink: dict[str, int] = {}
+    on_stack: dict[str, bool] = {}
+    scc_stack: list[str] = []
+    sccs: list[list[str]] = []
+
+    for start in graph.node_names():
+        if start in node_index:
+            continue
+
+        # Iterative Tarjan's using an explicit call stack.
+        # Each entry: (node, neighbors_iterator, phase)
+        # phase=False means first visit; phase=True means post-child processing.
+        call_stack: list[tuple[str, iter, bool]] = [
+            (start, iter(graph.neighbors(start)), False)
+        ]
+        node_index[start] = node_lowlink[start] = index_counter[0]
+        index_counter[0] += 1
+        on_stack[start] = True
+        scc_stack.append(start)
+
+        while call_stack:
+            u, neighbors_iter, _ = call_stack[-1]
+            advanced = False
+
+            for v in neighbors_iter:
+                if v not in node_index:
+                    # Tree edge — descend
+                    node_index[v] = node_lowlink[v] = index_counter[0]
+                    index_counter[0] += 1
+                    on_stack[v] = True
+                    scc_stack.append(v)
+                    call_stack.append((v, iter(graph.neighbors(v)), False))
+                    advanced = True
+                    break
+                elif on_stack.get(v, False):
+                    # Back/cross edge to node on stack
+                    node_lowlink[u] = min(node_lowlink[u], node_index[v])
+
+            if not advanced:
+                # All neighbors processed — check if u is a root of an SCC
+                if node_lowlink[u] == node_index[u]:
+                    component: list[str] = []
+                    while True:
+                        w = scc_stack.pop()
+                        on_stack[w] = False
+                        component.append(w)
+                        if w == u:
+                            break
+                    sccs.append(component)
+
+                call_stack.pop()
+                # Update parent's lowlink
+                if call_stack:
+                    parent = call_stack[-1][0]
+                    node_lowlink[parent] = min(
+                        node_lowlink[parent], node_lowlink[u]
+                    )
+
+    # Sort: non-trivial SCCs first (by size desc), then trivial
+    non_trivial = sorted([s for s in sccs if len(s) > 1], key=len, reverse=True)
+    trivial = [s for s in sccs if len(s) == 1]
+    return non_trivial + trivial
+
+
 # ── Summary Statistics ──────────────────────────────────────
 
 

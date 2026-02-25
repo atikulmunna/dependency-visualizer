@@ -1,4 +1,4 @@
-"""Tests for dgvis.analyzer — cycle detection, topo sort, depth, transitive deps."""
+"""Tests for dgvis.analyzer — cycle detection, topo sort, depth, transitive deps, SCC."""
 
 import pytest
 
@@ -6,6 +6,7 @@ from dgvis.analyzer import (
     compute_depth,
     detect_cycles,
     graph_stats,
+    strongly_connected_components,
     topological_sort,
     transitive_deps,
 )
@@ -165,3 +166,50 @@ class TestGraphStats:
         st = graph_stats(_cyclic_graph())
         assert st["has_cycles"] is True
         assert st["cycle_count"] >= 1
+
+
+# ── Strongly Connected Components tests ───────────────────
+
+
+class TestSCC:
+    def test_acyclic_all_trivial(self):
+        """An acyclic graph has only trivial (single-node) SCCs."""
+        sccs = strongly_connected_components(_acyclic_graph())
+        for comp in sccs:
+            assert len(comp) == 1
+        assert len(sccs) == 5
+
+    def test_simple_cycle(self):
+        """A 3-node cycle should produce one SCC of size 3."""
+        sccs = strongly_connected_components(_cyclic_graph())
+        non_trivial = [c for c in sccs if len(c) > 1]
+        assert len(non_trivial) == 1
+        assert set(non_trivial[0]) == {"a", "b", "c"}
+
+    def test_diamond_all_trivial(self):
+        sccs = strongly_connected_components(_diamond_graph())
+        for comp in sccs:
+            assert len(comp) == 1
+
+    def test_multiple_sccs(self):
+        """Graph with two separate cycles should yield two non-trivial SCCs."""
+        g = build_graph({
+            "a": ["b"], "b": ["a"],  # cycle 1
+            "c": ["d"], "d": ["c"],  # cycle 2
+            "e": [],                   # isolated
+        })
+        sccs = strongly_connected_components(g)
+        non_trivial = [c for c in sccs if len(c) > 1]
+        assert len(non_trivial) == 2
+        scc_sets = [set(c) for c in non_trivial]
+        assert {"a", "b"} in scc_sets
+        assert {"c", "d"} in scc_sets
+
+    def test_empty_graph(self):
+        g = Graph()
+        assert strongly_connected_components(g) == []
+
+    def test_non_trivial_first(self):
+        """Non-trivial SCCs should appear before trivial ones."""
+        sccs = strongly_connected_components(_cyclic_graph())
+        assert len(sccs[0]) > 1  # first is non-trivial
