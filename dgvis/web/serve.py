@@ -56,13 +56,14 @@ def _build_graph_json(graph: Graph) -> str:
 
 def render_html(graph: Graph) -> str:
     """Render the index.html template with graph data injected."""
+    import re
+
     template = _TEMPLATE.read_text(encoding="utf-8")
     graph_json = _build_graph_json(graph)
-    # Replace the placeholder JSON with real data
-    return template.replace(
-        _PLACEHOLDER + '{"nodes":[],"edges":[],"stats":{"node_count":0,"edge_count":0},"meta":{"max_depth":0,"cycles":[],"sccs":[],"roots":[],"leaves":[]}}',
-        graph_json,
-    )
+    # Replace everything from the placeholder marker through the default JSON object
+    # This is whitespace-agnostic so it works regardless of formatting
+    pattern = re.escape(_PLACEHOLDER) + r'\s*\{[^;]*\}'
+    return re.sub(pattern, graph_json, template, count=1)
 
 
 def serve(graph: Graph, port: int = 8080, open_browser: bool = True) -> None:
