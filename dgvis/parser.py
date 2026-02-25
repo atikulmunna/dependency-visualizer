@@ -259,6 +259,113 @@ def _shorten_go_module(module_path: str) -> str:
     return module_path.rstrip("/").rsplit("/", 1)[-1]
 
 
+# ── Cargo.toml (Rust) ───────────────────────────────────────
+
+# Matches lines like: serde = "1.0" or serde = { version = "1.0", ... }
+_CARGO_DEP_RE = re.compile(
+    r'^([A-Za-z0-9_-]+)\s*='
+)
+
+
+def parse_cargo_toml(filepath: str | Path) -> dict[str, list[str]]:
+    """Parse a Cargo.toml file for Rust crate dependencies.
+
+    Reads ``[dependencies]`` and ``[dev-dependencies]`` sections.
+    """
+    filepath = Path(filepath)
+    if not filepath.exists():
+        raise FileNotFoundError(f"File not found: {filepath}")
+
+    content = filepath.read_text(encoding="utf-8")
+    packages: list[str] = []
+    in_deps_section = False
+
+    for line in content.splitlines():
+        stripped = line.strip()
+
+        # Track sections
+        if stripped.startswith("["):
+            section = stripped.lower()
+            in_deps_section = section in (
+                "[dependencies]",
+                "[dev-dependencies]",
+                "[build-dependencies]",
+            )
+            continue
+
+        if not in_deps_section or not stripped or stripped.startswith("#"):
+            continue
+
+        m = _CARGO_DEP_RE.match(stripped)
+        if m:
+            packages.append(m.group(1))
+
+    return {"__root__": packages}
+
+
+# ── Gemfile (Ruby) ───────────────────────────────────────────
+
+# Matches: gem 'rails', '~> 7.0'  or  gem "pg"
+_GEMFILE_RE = re.compile(
+    r"""^\s*gem\s+['"]([A-Za-z0-9_.@-]+)['"]"""
+)
+
+
+def parse_gemfile(filepath: str | Path) -> dict[str, list[str]]:
+    """Parse a Ruby Gemfile for gem dependencies.
+
+    Handles ``gem`` declarations, skipping comments and ``source``/``group`` lines.
+    """
+    filepath = Path(filepath)
+    if not filepath.exists():
+        raise FileNotFoundError(f"File not found: {filepath}")
+
+    content = filepath.read_text(encoding="utf-8")
+    gems: list[str] = []
+
+    for line in content.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        m = _GEMFILE_RE.match(stripped)
+        if m:
+            gems.append(m.group(1))
+
+    return {"__root__": gems}
+
+
+# ── pom.xml (Java Maven) ────────────────────────────────────
+
+
+def parse_pom_xml(filepath: str | Path) -> dict[str, list[str]]:
+    """Parse a Maven pom.xml for Java dependencies.
+
+    Extracts ``groupId:artifactId`` from ``<dependency>`` blocks.
+    Uses basic regex to avoid requiring lxml.
+    """
+    filepath = Path(filepath)
+    if not filepath.exists():
+        raise FileNotFoundError(f"File not found: {filepath}")
+
+    content = filepath.read_text(encoding="utf-8")
+
+    # Find all <dependency>...</dependency> blocks
+    dep_blocks = re.findall(
+        r"<dependency>(.*?)</dependency>", content, re.DOTALL
+    )
+
+    packages: list[str] = []
+    for block in dep_blocks:
+        group = re.search(r"<groupId>\s*(.*?)\s*</groupId>", block)
+        artifact = re.search(r"<artifactId>\s*(.*?)\s*</artifactId>", block)
+        if artifact:
+            # Use short name (artifactId) for readability
+            name = artifact.group(1)
+            packages.append(name)
+
+    return {"__root__": packages}
+
+
 # ── Plugin Registry ──────────────────────────────────────────
 
 
@@ -356,14 +463,16 @@ _BUILTIN_PARSERS: dict[str, ParserFunc] = {
     "yaml": parse_yaml,
     "package_json": parse_package_json,
     "gomod": parse_gomod,
+    "cargo": parse_cargo_toml,
+    "gemfile": parse_gemfile,
+    "pom": parse_pom_xml,
 }
 
 
 def detect_format(filepath: str | Path) -> str:
     """Detect file format by extension.
 
-    Returns one of: ``'requirements'``, ``'yaml'``, ``'package_json'``, ``'gomod'``,
-    or ``'plugin'`` if a registered plugin matches.
+    Returns one of the built-in format keys or ``'plugin'``.
     """
     # Check plugin registry first (plugins take priority)
     if registry.lookup(filepath) is not None:
@@ -378,6 +487,12 @@ def detect_format(filepath: str | Path) -> str:
         return "package_json"
     if name == "go.mod":
         return "gomod"
+    if name == "cargo.toml":
+        return "cargo"
+    if name == "gemfile":
+        return "gemfile"
+    if name == "pom.xml":
+        return "pom"
 
     # Extension-based fallback
     if ext in (".yaml", ".yml"):
@@ -388,6 +503,10 @@ def detect_format(filepath: str | Path) -> str:
         return "package_json"
     if ext == ".mod":
         return "gomod"
+    if ext == ".toml":
+        return "cargo"
+    if ext == ".xml":
+        return "pom"
 
     raise ParseError(f"Unsupported file format: {name}")
 
@@ -403,11 +522,8 @@ def parse_file(filepath: str | Path) -> dict[str, list[str]]:
         return plugin_parser(filepath)
 
     fmt = detect_format(filepath)
-    if fmt == "yaml":
-        return parse_yaml(filepath)
-    if fmt == "package_json":
-        return parse_package_json(filepath)
-    if fmt == "gomod":
-        return parse_gomod(filepath)
+    parser = _BUILTIN_PARSERS.get(fmt)
+    if parser:
+        return parser(filepath)
     return parse_requirements(filepath)
 

@@ -5,7 +5,7 @@ A CLI tool that parses dependency files from real projects, builds directed grap
 ## Features
 
 - **Interactive Web Dashboard** — D3.js force-directed graph with drag, zoom, search, and SVG export
-- **Multi-format parsing** — `requirements.txt`, `package.json`/`package-lock.json`, `go.mod`, custom YAML
+- **Multi-format parsing** — `requirements.txt`, `package.json`/`package-lock.json`, `go.mod`, `Cargo.toml`, `Gemfile`, `pom.xml`, custom YAML
 - **Cycle detection** — Iterative DFS with back-edge tracking, handles 10,000+ node graphs
 - **Strongly connected components** — Tarjan's algorithm finds tightly-coupled clusters
 - **Topological sorting** — Kahn's algorithm for build-order resolution
@@ -21,34 +21,24 @@ A CLI tool that parses dependency files from real projects, builds directed grap
 ```bash
 git clone https://github.com/atikulmunna/dependency-visualizer.git
 cd dependency-visualizer
-pip install click pyyaml
+pip install .
 ```
 
-### Step 2: Set Python Path
+This installs `dgvis` as a global command — no `PYTHONPATH` setup needed.
 
-This tells Python where to find the `dgvis` package. Run this once per terminal session:
-
-```powershell
-# PowerShell (Windows)
-$env:PYTHONPATH="."
-
-# Bash (Linux/macOS)
-export PYTHONPATH="."
-```
-
-### Step 3: Visualize Your Project
+### Step 2: Visualize Your Project
 
 Point dgvis at **any dependency file** from a real project on your machine:
 
-```powershell
+```bash
 # Node.js project (best results — hundreds of deps)
-python -m dgvis web C:\path\to\your-project\package-lock.json
+dgvis web C:\path\to\your-project\package-lock.json
 
 # Python project
-python -m dgvis web C:\path\to\your-project\requirements.txt
+dgvis web C:\path\to\your-project\requirements.txt
 
 # Go project
-python -m dgvis web C:\path\to\your-project\go.mod
+dgvis web C:\path\to\your-project\go.mod
 ```
 
 This opens an interactive graph dashboard in your browser at `http://127.0.0.1:8080`.
@@ -66,6 +56,7 @@ This opens an interactive graph dashboard in your browser at `http://127.0.0.1:8
 |------|-------------|
 | `--port 3000` or `-p 3000` | Use a different port |
 | `--no-open` | Don't auto-open the browser |
+| `--watch` or `-w` | Auto-reload when the file changes |
 
 ![Web Dashboard — force-directed dependency graph](assets/dependency-biz.png)
 
@@ -123,8 +114,9 @@ python -m dgvis scc C:\path\to\deps.yaml
 
 ### `dgvis web <file>` — Interactive dashboard
 ```bash
-python -m dgvis web C:\path\to\package-lock.json
-python -m dgvis web C:\path\to\requirements.txt -p 3000 --no-open
+dgvis web C:\path\to\package-lock.json
+dgvis web C:\path\to\requirements.txt -p 3000 --no-open
+dgvis web C:\path\to\Cargo.toml --watch   # auto-reload on changes
 ```
 
 ---
@@ -137,6 +129,9 @@ python -m dgvis web C:\path\to\requirements.txt -p 3000 --no-open
 | **Node.js** | `package.json` | Direct deps + devDeps. Auto-uses lock file if present |
 | **Python** | `requirements.txt` | Direct dependencies with version specifiers |
 | **Go** | `go.mod` | Direct module dependencies |
+| **Rust** | `Cargo.toml` | Dependencies, dev-dependencies, build-dependencies |
+| **Ruby** | `Gemfile` | All gem declarations including groups |
+| **Java** | `pom.xml` | Maven dependency artifacts |
 | **Custom** | `*.yaml` / `*.yml` | Manual dependency graph definition |
 
 ### Custom YAML Format
@@ -161,7 +156,7 @@ dependencies:
 ```
 dgvis/
 ├── cli.py        → Click CLI with 6 commands
-├── parser.py     → Format detection + 5 parsers + plugin registry
+├── parser.py     → Format detection + 8 parsers + plugin registry
 ├── graph.py      → Node/Graph (adjacency list, no external libs)
 ├── analyzer.py   → DFS, Tarjan's SCC, topo sort, BFS depth
 ├── exporter.py   → DOT, JSON, ASCII tree renderers
@@ -241,9 +236,9 @@ chmod +x .git/hooks/pre-commit
 ## Testing
 
 ```bash
-$env:PYTHONPATH="."; python -m pytest tests/ -v
+python -m pytest tests/ -v
 
-# 118 tests across 7 test files (includes 10k+ node stress test)
+# 132 tests across 7 test files (includes 10k+ node stress test)
 ```
 
 ## Development

@@ -178,10 +178,12 @@ def scc(file: str) -> None:
 @click.argument("file")
 @click.option("--port", "-p", default=8080, help="Port for the web server.")
 @click.option("--no-open", is_flag=True, help="Don't auto-open the browser.")
-def web(file: str, port: int, no_open: bool) -> None:
+@click.option("--watch", "-w", is_flag=True, help="Auto-reload when file changes.")
+def web(file: str, port: int, no_open: bool, watch: bool) -> None:
     """Launch an interactive web dashboard for the dependency graph in FILE."""
     graph, _ = _load_graph(file)
 
     from dgvis.web.serve import serve
-    serve(graph, port=port, open_browser=not no_open)
+    serve(graph, port=port, open_browser=not no_open, watch_file=file if watch else None)
+
 

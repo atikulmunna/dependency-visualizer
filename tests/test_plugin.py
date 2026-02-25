@@ -94,4 +94,4 @@ class TestParserRegistry:
     def test_unsupported_without_plugin(self):
         """Unregistered extension should still raise ParseError."""
         with pytest.raises(ParseError, match="Unsupported"):
-            detect_format("deps.toml")
+            detect_format("deps.zzz")

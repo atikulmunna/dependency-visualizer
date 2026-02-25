@@ -205,7 +205,7 @@ class TestDetectFormat:
 
     def test_unsupported(self):
         with pytest.raises(ParseError, match="Unsupported"):
-            detect_format("deps.toml")
+            detect_format("deps.zzz")
 
 
 # ── parse_file integration ───────────────────────────────────
@@ -227,3 +227,91 @@ class TestParseFile:
     def test_auto_gomod(self):
         deps = parse_file(f"{FIXTURES}/go.mod")
         assert "gin" in deps["__root__"]
+
+    def test_auto_cargo(self):
+        deps = parse_file(f"{FIXTURES}/Cargo.toml")
+        assert "serde" in deps["__root__"]
+
+    def test_auto_gemfile(self):
+        deps = parse_file(f"{FIXTURES}/Gemfile")
+        assert "rails" in deps["__root__"]
+
+    def test_auto_pom(self):
+        deps = parse_file(f"{FIXTURES}/pom.xml")
+        assert "guava" in deps["__root__"]
+
+
+# ── Cargo.toml ───────────────────────────────────────────────
+
+
+class TestCargoToml:
+    def test_basic(self):
+        deps = parse_file(f"{FIXTURES}/Cargo.toml")
+        names = deps["__root__"]
+        assert "serde" in names
+        assert "tokio" in names
+        assert "clap" in names
+        assert "serde_json" in names
+        assert "reqwest" in names
+
+    def test_dev_deps(self):
+        deps = parse_file(f"{FIXTURES}/Cargo.toml")
+        names = deps["__root__"]
+        assert "criterion" in names
+        assert "mockall" in names
+
+    def test_count(self):
+        deps = parse_file(f"{FIXTURES}/Cargo.toml")
+        assert len(deps["__root__"]) == 7  # 5 deps + 2 dev-deps
+
+    def test_detect_format(self):
+        assert detect_format("Cargo.toml") == "cargo"
+
+
+# ── Gemfile ──────────────────────────────────────────────────
+
+
+class TestGemfile:
+    def test_basic(self):
+        deps = parse_file(f"{FIXTURES}/Gemfile")
+        names = deps["__root__"]
+        assert "rails" in names
+        assert "pg" in names
+        assert "puma" in names
+        assert "redis" in names
+        assert "sidekiq" in names
+
+    def test_group_gems(self):
+        deps = parse_file(f"{FIXTURES}/Gemfile")
+        names = deps["__root__"]
+        assert "rspec-rails" in names
+        assert "debug" in names
+        assert "rubocop" in names
+
+    def test_count(self):
+        deps = parse_file(f"{FIXTURES}/Gemfile")
+        assert len(deps["__root__"]) == 8
+
+    def test_detect_format(self):
+        assert detect_format("Gemfile") == "gemfile"
+
+
+# ── pom.xml ──────────────────────────────────────────────────
+
+
+class TestPomXml:
+    def test_basic(self):
+        deps = parse_file(f"{FIXTURES}/pom.xml")
+        names = deps["__root__"]
+        assert "spring-boot-starter-web" in names
+        assert "postgresql" in names
+        assert "guava" in names
+        assert "lombok" in names
+
+    def test_count(self):
+        deps = parse_file(f"{FIXTURES}/pom.xml")
+        assert len(deps["__root__"]) == 4
+
+    def test_detect_format(self):
+        assert detect_format("pom.xml") == "pom"
+
