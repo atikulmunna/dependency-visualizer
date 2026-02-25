@@ -1,0 +1,92 @@
+name: Dependency Check
+
+on:
+  push:
+    paths:
+      - 'requirements*.txt'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'go.mod'
+      - '*.yaml'
+      - '*.yml'
+  pull_request:
+    paths:
+      - 'requirements*.txt'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'go.mod'
+      - '*.yaml'
+      - '*.yml'
+  workflow_dispatch:
+    inputs:
+      file:
+        description: 'Path to dependency file'
+        required: false
+        default: 'requirements.txt'
+
+jobs:
+  check-dependencies:
+    runs-on: ubuntu-latest
+    name: Check for circular dependencies
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dgvis
+        run: |
+          pip install click pyyaml
+          pip install git+https://github.com/atikulmunna/dependency-visualizer.git 2>/dev/null || true
+
+      - name: Clone dgvis (fallback)
+        run: |
+          if ! command -v dgvis &> /dev/null; then
+            git clone --depth 1 https://github.com/atikulmunna/dependency-visualizer.git /tmp/dgvis
+            export PYTHONPATH="/tmp/dgvis:$PYTHONPATH"
+            echo "PYTHONPATH=/tmp/dgvis:$PYTHONPATH" >> $GITHUB_ENV
+          fi
+
+      - name: Detect dependency files
+        id: detect
+        run: |
+          FILES=""
+          for f in requirements.txt requirements*.txt package.json go.mod; do
+            if [ -f "$f" ]; then
+              FILES="$FILES $f"
+            fi
+          done
+          # Use manual input if provided
+          if [ -n "${{ github.event.inputs.file }}" ] && [ -f "${{ github.event.inputs.file }}" ]; then
+            FILES="${{ github.event.inputs.file }}"
+          fi
+          echo "files=$FILES" >> $GITHUB_OUTPUT
+          echo "Found dependency files: $FILES"
+
+      - name: Check for circular dependencies
+        if: steps.detect.outputs.files != ''
+        run: |
+          EXIT_CODE=0
+          for f in ${{ steps.detect.outputs.files }}; do
+            echo "━━━ Checking $f ━━━"
+            python -m dgvis detect-cycles "$f" || EXIT_CODE=1
+            echo ""
+            python -m dgvis scc "$f"
+            echo ""
+          done
+          exit $EXIT_CODE
+
+      - name: Summary
+        if: always() && steps.detect.outputs.files != ''
+        run: |
+          echo "## Dependency Analysis Results" >> $GITHUB_STEP_SUMMARY
+          for f in ${{ steps.detect.outputs.files }}; do
+            echo "### $f" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            python -m dgvis analyze "$f" 2>&1 >> $GITHUB_STEP_SUMMARY || true
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          done

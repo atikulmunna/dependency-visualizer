@@ -194,6 +194,45 @@ registry.register_parser(my_parser, extensions=[".toml"])
 
 Plugins take priority over built-in parsers. Use `registry.clear()` to reset.
 
+## CI Integration
+
+### GitHub Action
+
+Add this to any repo's `.github/workflows/` to check dependencies on every push:
+
+```yaml
+name: Dependency Check
+on: [push, pull_request]
+jobs:
+  check-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install click pyyaml
+      - run: |
+          git clone --depth 1 https://github.com/atikulmunna/dependency-visualizer.git /tmp/dgvis
+          PYTHONPATH=/tmp/dgvis python -m dgvis detect-cycles requirements.txt
+```
+
+Or use the included workflow — copy `.github/workflows/check-deps.yml` which auto-detects dependency files and writes analysis summaries to PRs.
+
+### Pre-commit Hook
+
+```bash
+# Copy the hook into your repo
+cp scripts/pre-commit-hook.sh .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+
+# Or run manually
+bash scripts/pre-commit-hook.sh
+bash scripts/pre-commit-hook.sh path/to/deps.yaml  # specific file
+```
+
+The hook auto-detects `requirements.txt`, `package.json`, `go.mod`, and YAML dep files.
+
 ## Testing
 
 ```bash
